@@ -1,0 +1,11 @@
+#map {
+    height: 560px;
+}
+
+.geofence-label {
+    position: absolute;
+    z-index: 1000;
+    background-color: white;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
