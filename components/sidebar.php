@@ -8,7 +8,7 @@
                 <i class="fa-solid fa-map-location-dot fs-2" style="color: black;" id="toggleDrawControls" onclick="toggleDrawControls()"></i>
             </li>
             <li class="nav-item pb-5">
-                <a href="monitorBandobast.php"><i class="fa-solid fa-desktop fs-2" style="color: black;"></i></a>
+                <a href="#"><i class="fa-solid fa-desktop fs-2" style="color: black;"></i></a>
             </li>
             <li class="nav-item pb-5">
                 <a href="report.php"><i class="fa-solid fa-chart-pie fs-2" style="color: black;"></i></a>

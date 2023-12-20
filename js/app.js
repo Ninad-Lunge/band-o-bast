@@ -52,30 +52,30 @@ const database = firebase.database();
 const dataPath = "/";
 var map;
 
-function initializeMap(latitude, longitude) {
-  if (!map) {
-      map = L.map('map').setView([latitude, longitude], 13);
+// function initializeMap(latitude, longitude) {
+//   if (!map) {
+//       map = L.map('map').setView([latitude, longitude], 13);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      }).addTo(map);
+//       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//       }).addTo(map);
 
-      var marker = L.marker([latitude, longitude]).addTo(map);
+//       var marker = L.marker([latitude, longitude]).addTo(map);
 
-      marker.bindPopup("<b>Location</b>").openPopup();
-  } else {
-      map.setView([latitude, longitude], 13);
+//       marker.bindPopup("<b>Location</b>").openPopup();
+//   } else {
+//       map.setView([latitude, longitude], 13);
 
-      map.eachLayer(function (layer) {
-          if (layer instanceof L.Marker) {
-              layer.remove();
-          }
-      });
+//       map.eachLayer(function (layer) {
+//           if (layer instanceof L.Marker) {
+//               layer.remove();
+//           }
+//       });
 
-      var marker = L.marker([latitude, longitude]).addTo(map);
+//       var marker = L.marker([latitude, longitude]).addTo(map);
 
-      marker.bindPopup("<b>Location</b>").openPopup();
-  }
-}
+//       marker.bindPopup("<b>Location</b>").openPopup();
+//   }
+// }
 
 function checkPoint(latitude, longitude) {
   if (!isNaN(latitude) && !isNaN(longitude)) {
@@ -92,32 +92,32 @@ function checkPoint(latitude, longitude) {
   }
 }
 
-let latitude;
-let longitude;
+// let latitude;
+// let longitude;
 
-database.ref(dataPath).on("value", function (snapshot) {
-  const jsonData = snapshot.val();
+// database.ref(dataPath).on("value", function (snapshot) {
+//   const jsonData = snapshot.val();
 
-  const gpsDataKeys = Object.keys(jsonData.gpsData);
+//   const gpsDataKeys = Object.keys(jsonData.gpsData);
 
-  if (gpsDataKeys.length > 0) {
-      const firstKey = gpsDataKeys[0];
-      const coordinatesString = jsonData.gpsData[firstKey];
+//   if (gpsDataKeys.length > 0) {
+//       const firstKey = gpsDataKeys[0];
+//       const coordinatesString = jsonData.gpsData[firstKey];
 
-      const regex = /latitude:(.*),longitude:(.*)/;
-      const match = coordinatesString.match(regex);
+//       const regex = /latitude:(.*),longitude:(.*)/;
+//       const match = coordinatesString.match(regex);
 
-      if (match && match.length === 3) {
-          latitude = parseFloat(match[1].trim());
-          longitude = parseFloat(match[2].trim());
-      }
+//       if (match && match.length === 3) {
+//           latitude = parseFloat(match[1].trim());
+//           longitude = parseFloat(match[2].trim());
+//       }
 
-      initializeMap(latitude, longitude);
-      checkPoint(latitude, longitude);
-  } else {
-      console.log('No gpsData available.');
-  }
-});
+//       initializeMap(latitude, longitude);
+//       checkPoint(latitude, longitude);
+//   } else {
+//       console.log('No gpsData available.');
+//   }
+// });
 
 setInterval(function () {
 }, 5000);
@@ -130,68 +130,39 @@ var geocoder = L.Control.geocoder({
 
 var geofenceCoordinates = [];
 
+function showForm() {
+  $('#form-container').modal('show');
+}
+
 map.on(L.Draw.Event.CREATED, function (event) {
   var layer = event.layer;
   drawnItems.addLayer(layer);
   geofenceCoordinates = layer.getLatLngs()[0].map(point => [point.lat, point.lng]);
-
-  layer.on('click', function () {
-    var geofenceName = prompt('Enter a name for the geofence:');
-    if (geofenceName) {
-      var geofenceData = {
-        name: geofenceName,
-        coordinates: geofenceCoordinates
-      };
-
-      database.ref('geofences').push(geofenceData, function (error) {
-        if (error) {
-          showToast('Error', 'Failed to save geofence to the database: ' + error.message, 'bg-danger');
-        } else {
-          showToast('Success', 'Geofence saved successfully!', 'bg-success');
-        }
-      });
-
-      addLabelToPolygon(layer, geofenceName);
-    }
-  });
+  showForm();
 });
 
-$('#coordinatesForm').submit(function (event) {
+$('#firebaseForm').submit(function (event) {
   event.preventDefault();
 
-  if (geofenceCoordinates.length < 3) {
-    showToast('Error', 'Please add at least three coordinates for the geofence.', 'bg-danger');
-    return;
-  }
-
-  var geofenceName = $('#geofenceName').val().trim();
-  if (geofenceName === '') {
-    showToast('Error', 'Please enter a name for the geofence.', 'bg-danger');
-    return;
-  }
-
-  var geofenceData = {
-    name: geofenceName,
-    coordinates: geofenceCoordinates
+  var formData = {
+    name: $('#name').val(),
+    date: $('#date').val(),
+    durationfrom: $('#durationFrom').val(),
+    durationto: $('#durationTo').val(),
+    options: Array.from($('#options')[0].selectedOptions).map(option => option.value),
+    geofenceCoordinates: geofenceCoordinates
   };
 
-  database.ref('geofences').push(geofenceData, function (error) {
-    if (error) {
-      showToast('Error', 'Failed to save geofence to the database: ' + error.message, 'bg-danger');
-    } else {
-      showToast('Success', 'Geofence saved successfully!', 'bg-success');
-      $('#geofenceName').val('');
-      clearCoordinates();
-    }
-  });
-});
-
-map.on(L.Draw.Event.CREATED, function (event) {
-  var layer = event.layer;
-  drawnItems.addLayer(layer);
-  geofenceCoordinates = layer.getLatLngs()[0].map(point => [point.lat, point.lng]);
-
-  checkPoint(latitude, longitude);
+  var formsRef = database.ref('geofences');
+  formsRef.push(formData)
+    .then(function () {
+      console.log("Form Data Saved to Firebase:", formData);
+      $('#firebaseForm').trigger('reset');
+      $('#form-container').modal('hide');
+    })
+    .catch(function (error) {
+      console.error("Error saving form data:", error);
+    });
 });
 
 function showToast(title, message, bgClass) {
@@ -235,19 +206,6 @@ function addLabelToPolygon(polygon, label) {
   map.getContainer().appendChild(labelElement[0]);
 }
 
-// function addCoordinate() {
-//   var latitude = parseFloat($('#latitude').val());
-//   var longitude = parseFloat($('#longitude').val());
-
-//   if (!isNaN(latitude) && !isNaN(longitude)) {
-//     geofenceCoordinates.push([latitude, longitude]);
-//     drawnItems.clearLayers();
-//     L.polygon(geofenceCoordinates).addTo(drawnItems);
-//   } else {
-//     showToast('Error', 'Invalid coordinates. Please enter numeric values.', 'bg-danger');
-//   }
-// }
-
 function clearCoordinates() {
   geofenceCoordinates = [];
   drawnItems.clearLayers();
@@ -268,78 +226,79 @@ function isPointInsideGeofence(point) {
   return isInside.length > 0;
 }
 
-// function checkPoint() {
-//   var latitude = parseFloat($('#latitude').val());
-//   var longitude = parseFloat($('#longitude').val());
-
-//   if (!isNaN(latitude) && !isNaN(longitude)) {
-//       var point = { lat: latitude, lng: longitude };
-//       var result = isPointInsideGeofence(point);
-
-//       if (result) {
-//           showToast('Success', 'Point is inside the geofence!', 'bg-success');
-//       } else {
-//           showToast('Warning', 'Point is outside the geofence.', 'bg-warning');
-//       }
-//   } else {
-//       showToast('Error', 'Invalid coordinates. Please enter numeric values.', 'bg-danger');
-//   }
-// }
-
-// var map;
-
-// function initializeMap(latitude, longitude) {
-//   if (!map) {
-//     map = L.map('map').setView([latitude, longitude], 13);
-
-//     // Add a tile layer
-//     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//       attribution: '© OpenStreetMap contributors'
-//     }).addTo(map);
-
-//     // Add a marker to the map
-//     var marker = L.marker([latitude, longitude]).addTo(map);
-
-//     // Add a popup to the marker
-//     marker.bindPopup("<b>Hello World!</b><br>This is a sample marker.").openPopup();
-//   } else {
-//     // Map is already initialized, so re-adjust the view
-//     map.setView([latitude, longitude], 13);
-
-//     // Remove existing marker and add a new one
-//     map.eachLayer(function (layer) {
-//       if (layer instanceof L.Marker) {
-//         layer.remove();
-//       }
-//     });
-
-//     // Add a new marker to the map
-//     var marker = L.marker([latitude, longitude]).addTo(map);
-
-//     // Add a popup to the marker
-//     marker.bindPopup("<b>Hello World!</b><br>This is a sample marker.").openPopup();
-//   }
-// }
-
-// function checkPoint(latitude, longitude) {
-//   if (!isNaN(latitude) && !isNaN(longitude)) {
-//     var point = { lat: latitude, lng: longitude };
-//     var result = isPointInsideGeofence(point);
-
-//     if (result) {
-//       console.log('Point is inside the geofence.');
-//     } else {
-//       console.log('Point is outside the geofence.');
-//     }
-//   } else {
-//     console.error('Invalid coordinates. Please enter numeric values.');
-//   }
-// }
-
 $('#coordinatesForm').submit(function (event) {
 event.preventDefault();
 if (geofenceCoordinates.length < 3) {
     alert('Please add at least three coordinates for the geofence.');
     return;
 }
+});
+
+function fetchOptionsFromFirebase() {
+  var geofencesRef = database.ref('DeviceDetails');
+
+  geofencesRef.once('value')
+    .then(function (snapshot) {
+      var geofences = snapshot.val();
+      var deviceIds = [];
+
+      if (geofences) {
+        Object.values(geofences).forEach(function (geofence) {
+          if (geofence && geofence.device_id) {
+            deviceIds.push(geofence.device_id);
+          }
+        });
+      }
+
+      console.log('Device IDs from Firebase:', deviceIds);
+
+      var selectElement = $('#options');
+      selectElement.empty();
+
+      deviceIds.forEach(function (deviceId) {
+        var optionElement = $('<option>');
+        optionElement.val(deviceId).text(deviceId);
+        selectElement.append(optionElement);
+      });
+    })
+    .catch(function (error) {
+      console.error("Error fetching device IDs from Firebase:", error);
+    });
+}
+
+$(document).ready(function () {
+  fetchOptionsFromFirebase();
+
+  $('#form-container').on('hidden.bs.modal', function () {
+      $('#firebaseForm').trigger('reset');
+  });
+
+  $('#form-container-submit').on('click', function () {
+      $('#form-container').modal('hide');
+  });
+});
+
+var devicesLayer = L.layerGroup();
+map.addLayer(devicesLayer);
+
+function updateDeviceMarkers(deviceData) {
+  devicesLayer.clearLayers();
+
+  if (deviceData) {
+    Object.values(deviceData).forEach(function (device) {
+      if (device && device.latitude && device.longitude) {
+        var deviceMarker = L.marker([device.latitude, device.longitude])
+          .bindPopup(`<b>Device ID:</b> ${device.device_id}<br><b>Location:</b> ${device.latitude}, ${device.longitude}`);
+        devicesLayer.addLayer(deviceMarker);
+      }
+    });
+  }
+}
+
+database.ref('DeviceDetails').on('value', function (snapshot) {
+  var deviceData = snapshot.val();
+  
+  setTimeout(function () {
+    updateDeviceMarkers(deviceData);
+  }, 0);
 });
