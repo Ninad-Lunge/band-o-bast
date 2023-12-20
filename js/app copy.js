@@ -64,10 +64,8 @@ function isPointInsideGeofence(point) {
   var lat = point.lat;
   var lng = point.lng;
 
-  // Create an array of [lat, lng] from geofenceCoordinates
   var polygon = geofenceCoordinates.map(coord => [coord[0], coord[1]]);
 
-  // Check if the point is inside the geofence
   var isInside = leafletPip.pointInLayer([lng, lat], L.geoJSON({
     type: 'Polygon',
     coordinates: [polygon],

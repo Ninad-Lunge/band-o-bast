@@ -34,6 +34,94 @@ function toggleDrawControls() {
   }
 }
 
+var firebaseConfig = {
+  apiKey: "AIzaSyCDKaEz_uAye0bpcefq-lYp8VSOyfNAdSA",
+  authDomain: "band-o-bast-7c5f1.firebaseapp.com",
+  databaseURL: "https://band-o-bast-7c5f1-default-rtdb.firebaseio.com",
+  projectId: "band-o-bast-7c5f1",
+  storageBucket: "band-o-bast-7c5f1.appspot.com",
+  messagingSenderId: "1066451383075",
+  appId: "1:1066451383075:web:9b4b0f1e1baf6976621296",
+  measurementId: "G-5NCH6X0MX6"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const database = firebase.database();
+
+const dataPath = "/";
+var map;
+
+function initializeMap(latitude, longitude) {
+  if (!map) {
+      map = L.map('map').setView([latitude, longitude], 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      }).addTo(map);
+
+      var marker = L.marker([latitude, longitude]).addTo(map);
+
+      marker.bindPopup("<b>Location</b>").openPopup();
+  } else {
+      map.setView([latitude, longitude], 13);
+
+      map.eachLayer(function (layer) {
+          if (layer instanceof L.Marker) {
+              layer.remove();
+          }
+      });
+
+      var marker = L.marker([latitude, longitude]).addTo(map);
+
+      marker.bindPopup("<b>Location</b>").openPopup();
+  }
+}
+
+function checkPoint(latitude, longitude) {
+  if (!isNaN(latitude) && !isNaN(longitude)) {
+      var point = { lat: latitude, lng: longitude };
+      var result = isPointInsideGeofence(point);
+
+      if (result) {
+          console.log('Point is inside the geofence.');
+      } else {
+          console.log('Point is outside the geofence.');
+      }
+  } else {
+      console.error('Invalid coordinates. Please enter numeric values.');
+  }
+}
+
+let latitude;
+let longitude;
+
+database.ref(dataPath).on("value", function (snapshot) {
+  const jsonData = snapshot.val();
+
+  const gpsDataKeys = Object.keys(jsonData.gpsData);
+
+  if (gpsDataKeys.length > 0) {
+      const firstKey = gpsDataKeys[0];
+      const coordinatesString = jsonData.gpsData[firstKey];
+
+      const regex = /latitude:(.*),longitude:(.*)/;
+      const match = coordinatesString.match(regex);
+
+      if (match && match.length === 3) {
+          latitude = parseFloat(match[1].trim());
+          longitude = parseFloat(match[2].trim());
+      }
+
+      initializeMap(latitude, longitude);
+      checkPoint(latitude, longitude);
+  } else {
+      console.log('No gpsData available.');
+  }
+});
+
+setInterval(function () {
+}, 5000);
+
 var geocoder = L.Control.geocoder({
   defaultMarkGeocode: false
 }).on('markgeocode', function (e) {
@@ -47,11 +135,9 @@ map.on(L.Draw.Event.CREATED, function (event) {
   drawnItems.addLayer(layer);
   geofenceCoordinates = layer.getLatLngs()[0].map(point => [point.lat, point.lng]);
 
-  // Add click event listener to the new geofence polygon
   layer.on('click', function () {
     var geofenceName = prompt('Enter a name for the geofence:');
     if (geofenceName) {
-      // Store the geofence name in the database
       var geofenceData = {
         name: geofenceName,
         coordinates: geofenceCoordinates
@@ -65,7 +151,6 @@ map.on(L.Draw.Event.CREATED, function (event) {
         }
       });
 
-      // Display the geofence name on the polygon
       addLabelToPolygon(layer, geofenceName);
     }
   });
@@ -85,7 +170,6 @@ $('#coordinatesForm').submit(function (event) {
     return;
   }
 
-  // Push geofence data to Firebase Realtime Database
   var geofenceData = {
     name: geofenceName,
     coordinates: geofenceCoordinates
@@ -96,11 +180,18 @@ $('#coordinatesForm').submit(function (event) {
       showToast('Error', 'Failed to save geofence to the database: ' + error.message, 'bg-danger');
     } else {
       showToast('Success', 'Geofence saved successfully!', 'bg-success');
-      // Clear form inputs and layers
       $('#geofenceName').val('');
       clearCoordinates();
     }
   });
+});
+
+map.on(L.Draw.Event.CREATED, function (event) {
+  var layer = event.layer;
+  drawnItems.addLayer(layer);
+  geofenceCoordinates = layer.getLatLngs()[0].map(point => [point.lat, point.lng]);
+
+  checkPoint(latitude, longitude);
 });
 
 function showToast(title, message, bgClass) {
@@ -126,7 +217,6 @@ function showToast(title, message, bgClass) {
 
   bsToast.show();
 
-  // Remove the toast from the DOM after it hides
   setTimeout(function () {
     toast.remove();
   }, autoHide + delay);
@@ -137,13 +227,11 @@ function addLabelToPolygon(polygon, label) {
   var center = bounds.getCenter();
   var labelElement = $('<div class="geofence-label">').text(label);
 
-  // Position the label near the center of the polygon
   labelElement.css({
     top: map.latLngToLayerPoint(center).y + 'px',
     left: map.latLngToLayerPoint(center).x + 'px'
   });
 
-  // Add the label to the map container
   map.getContainer().appendChild(labelElement[0]);
 }
 

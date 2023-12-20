@@ -4,174 +4,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formal Dashboard with Geofencing Map</title>
+    <title>Dashboard</title>
+    <?php include('php/links.php'); ?>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-    <!-- Add Bootstrap CSS link -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-        }
-
-        .navbar {
-            height: 54px;
-        }
-
-        .navbar img {
-            width: 20px;
-            margin-right: 10px;
-            margin-left: 5px;
-        }
-
-        .navbar h1 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: bold;
-            line-height: 20px;
-        }
-
-        #left-sidebar2{
-            height: 100%;
-            width: 100%;
-        }
-
-        .sidebar img.logo {
-            width: 30px;
-            height: auto;
-            margin-top: 30px;
-            margin-right: 20%;
-            align-items: center;
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .sidebar img.logo:hover::after {
-            content: attr(data-name);
-            position: absolute;
-            top: 100%;
-            left: 0%;
-            transform: translateX(-50%);
-            background-color: #fcf7f7;
-            color: #f9f6f6;
-            border-radius: 0px;
-            font-size: 14px;
-            z-index: 1;
-        }
-
-        .col-md-2.sidebar {
-            flex: 0 0 3%;
-            height: 100vh;
-            width: 100%;
-            background-color: #fffcfc;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .col-md-2.sidebar img.logo:hover {
-            transform: scale(1.2);
-        }
-        #map {
-            height: 650px;
-            /* width: 76%; */
-            margin-top: 0px;
-            margin-right: 0;
-        }
-
-        .row {
-            height: 100vh;
-        }
-
-        .sector-box {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel {
-            height: 100%;
-            width: 100%;
-            
-            color: #333;
-            background-color: #fff;
-            
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease-in-out;
-            display: flex;
-            flex-direction: column;
-        }
-        .notification-item {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark navbar-expand-sm">
-        <img src="image/WhatsApp_Image_2023-12-07_at_13.39.46_4919e1c9-removebg-preview.png" alt="Website Logo"
-            class="navbar-brand">
-        <h1 class="navbar-brand">Band-O-Bast System</h1>
-    </nav>
-
+<body>
     <div class="container-fluid">
         <div class="row">
-        
-        <nav class="col-md-2 sidebar mr-auto" style="padding-right: 3%;background-color: #e6e5e5;">
-        <a href="dashboard.php"><img class="logo" src="image/home_25694.png" alt="Pin Logo" data-name="Pin Logo"></a>
-    <a href="sector.php"><img class="logo" src="image/pin_1217301.png" alt="Pin Logo" data-name="Pin Logo"></a>
-    <a href="monitorBandobast.php"><img class="logo" src="image/search_5140760.png" alt="Search Logo" data-name="Search Logo"></a>
-    <a href="profile.php"><img class="logo" src="image/account_3033143.png" alt="Account Logo" data-name="Account Logo"></a>
-    <a href="report.php"><img class="logo" src="image/report_7965820.png" alt="Account Logo" data-name="Account Logo"></a>
-    
-</nav>
-
-
-            <div class="col col-md-3">
-                <div id="left-sidebar2" class="col-md-auto" style="padding-left:0px ;padding-top: 4px;padding-right:0px;">
-                <div class="panel" style="height: 90%; text-align: center;">
-                    
-                        <h3>Notification Panel</h3>
-                        <div class="notification-item">
-                            <strong>Notification 1:</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        </div>
-                        <div class="notification-item">
-                            <strong>Notification 2:</strong> Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                        </div>
-                        <div class="notification-item">
-                            <strong>Notification 3:</strong> Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-                        </div>
-                      
-                    </div>
-                </div>
-            </div>
-
-            <div class="col" style="padding-left: 0px;">
-                <div class="col-md-auto" id="map"></div>
+            <?php include('components/titlebar.php'); ?>
+        </div>
+        <div class="row">
+            <?php include('components/sidebar.php'); ?>
+            <div class="col my-1 ps-0 me-2 border border-dark">
+                <div id="map"></div>
             </div>
         </div>
     </div>
-    
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-draw"></script>
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script src="https://unpkg.com/leaflet-pip/leaflet-pip.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="app.js"></script>
-        
-        </body>
+    <!-- Include Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.1/firebase-database-compat.js"></script>
 
-        </html>
+    <!-- Load other scripts -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script>
+    <script src="https://unpkg.com/leaflet-draw" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" defer></script>
+    <script src="https://unpkg.com/leaflet-pip/leaflet-pip.js" defer></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js" defer></script>
+    <script src="js/app.js" defer></script>
+
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyCDKaEz_uAye0bpcefq-lYp8VSOyfNAdSA",
+            authDomain: "band-o-bast-7c5f1.firebaseapp.com",
+            databaseURL: "https://band-o-bast-7c5f1-default-rtdb.firebaseio.com",
+            projectId: "band-o-bast-7c5f1",
+            storageBucket: "band-o-bast-7c5f1.appspot.com",
+            messagingSenderId: "1066451383075",
+            appId: "1:1066451383075:web:9b4b0f1e1baf6976621296",
+            measurementId: "G-5NCH6X0MX6"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        const database = firebase.database();
+
+        const dataPath = "/gpsData/";
+        var map;
+
+        // const deviceId = [1, 2, 3, 4];
+        // deviceId.forEach(Id){
+        //     dataPath = 
+        // }
+
+        function initializeMap(latitude, longitude) {
+            if (!map) {
+                map = L.map('map').setView([latitude, longitude], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    // attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                var marker = L.marker([latitude, longitude]).addTo(map);
+
+                marker.bindPopup("<b>Location</b>").openPopup();
+            } else {
+                map.setView([latitude, longitude], 13);
+
+                map.eachLayer(function (layer) {
+                    if (layer instanceof L.Marker) {
+                        layer.remove();
+                    }
+                });
+
+                var marker = L.marker([latitude, longitude]).addTo(map);
+
+                marker.bindPopup("<b>Location</b>").openPopup();
+            }
+        }
+
+        function checkPoint(latitude, longitude) {
+            if (!isNaN(latitude) && !isNaN(longitude)) {
+                var point = { lat: latitude, lng: longitude };
+                var result = isPointInsideGeofence(point);
+
+                if (!result) {
+                    // Point is outside the geofence, display toast
+                    var toastTitle = 'Warning';
+                    var toastMessage = 'Point is outside the geofence.';
+                    var toastClass = 'bg-warning';
+                    showToast(toastTitle, toastMessage, toastClass);
+                } else {
+                    // Point is inside the geofence, log to console
+                    console.log('Point is inside the geofence.');
+                }
+            } else {
+                showToast('Error', 'Invalid coordinates. Please enter numeric values.', 'bg-danger');
+            }
+        }
+
+        database.ref(dataPath).on("value", function (snapshot) {
+            const jsonData = snapshot.val();
+
+            let latitude;
+            let longitude;
+
+            const gpsDataKeys = Object.keys(jsonData.gpsData);
+
+            if (gpsDataKeys.length > 0) {
+                const firstKey = gpsDataKeys[0];
+                const coordinatesString = jsonData.gpsData[firstKey];
+
+                const regex = /latitude:(.*),longitude:(.*)/;
+                const match = coordinatesString.match(regex);
+
+                if (match && match.length === 3) {
+                    latitude = parseFloat(match[1].trim());
+                    longitude = parseFloat(match[2].trim());
+                }
+
+                initializeMap(latitude, longitude);
+                checkPoint(latitude, longitude);
+            } else {
+                console.log('No gpsData available.');
+            }
+        });
+
+        setInterval(function () {
+            // Additional tasks if needed
+        }, 5000);
+    </script>
+</body>
+</html>

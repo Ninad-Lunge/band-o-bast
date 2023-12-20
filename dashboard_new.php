@@ -38,7 +38,7 @@
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js" defer></script>
     <script src="js/app.js" defer></script>
 
-    <script>
+    <!-- <script>
         var firebaseConfig = {
             apiKey: "AIzaSyCDKaEz_uAye0bpcefq-lYp8VSOyfNAdSA",
             authDomain: "band-o-bast-7c5f1.firebaseapp.com",
@@ -54,7 +54,7 @@
 
         const database = firebase.database();
 
-        const dataPath = "/"; // Update this path accordingly
+        const dataPath = "/";
         var map;
 
         function initializeMap(latitude, longitude) {
@@ -62,7 +62,6 @@
                 map = L.map('map').setView([latitude, longitude], 13);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    // attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
 
                 var marker = L.marker([latitude, longitude]).addTo(map);
@@ -88,18 +87,13 @@
                 var point = { lat: latitude, lng: longitude };
                 var result = isPointInsideGeofence(point);
 
-                if (!result) {
-                    // Point is outside the geofence, display toast
-                    var toastTitle = 'Warning';
-                    var toastMessage = 'Point is outside the geofence.';
-                    var toastClass = 'bg-warning';
-                    showToast(toastTitle, toastMessage, toastClass);
-                } else {
-                    // Point is inside the geofence, log to console
+                if (result) {
                     console.log('Point is inside the geofence.');
+                } else {
+                    console.log('Point is outside the geofence.');
                 }
             } else {
-                showToast('Error', 'Invalid coordinates. Please enter numeric values.', 'bg-danger');
+                console.error('Invalid coordinates. Please enter numeric values.');
             }
         }
 
@@ -131,9 +125,8 @@
         });
 
         setInterval(function () {
-            // Additional tasks if needed
         }, 5000);
-    </script>
+    </script> -->
 </body>
 
 </html>
