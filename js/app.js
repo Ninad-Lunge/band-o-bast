@@ -49,89 +49,62 @@ firebase.initializeApp(firebaseConfig);
 
 const database = firebase.database();
 
-const dataPath = "/";
 var map;
 
-// function initializeMap(latitude, longitude) {
-//   if (!map) {
-//       map = L.map('map').setView([latitude, longitude], 13);
+var devicesLayer = L.layerGroup();
+map.addLayer(devicesLayer);
 
-//       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//       }).addTo(map);
+function updateDeviceMarkers(deviceData) {
+  devicesLayer.clearLayers();
 
-//       var marker = L.marker([latitude, longitude]).addTo(map);
-
-//       marker.bindPopup("<b>Location</b>").openPopup();
-//   } else {
-//       map.setView([latitude, longitude], 13);
-
-//       map.eachLayer(function (layer) {
-//           if (layer instanceof L.Marker) {
-//               layer.remove();
-//           }
-//       });
-
-//       var marker = L.marker([latitude, longitude]).addTo(map);
-
-//       marker.bindPopup("<b>Location</b>").openPopup();
-//   }
-// }
-
-function checkPoint(latitude, longitude) {
-  if (!isNaN(latitude) && !isNaN(longitude)) {
-      var point = { lat: latitude, lng: longitude };
-      var result = isPointInsideGeofence(point);
-
-      if (result) {
-          console.log('Point is inside the geofence.');
-      } else {
-          console.log('Point is outside the geofence.');
+  if (deviceData) {
+    Object.values(deviceData).forEach(function (device) {
+      if (device && device.latitude && device.longitude) {
+        var deviceMarker = L.marker([device.latitude, device.longitude])
+          .bindPopup(`<b>Device ID:</b> ${device.device_id}<br><b>Location:</b> ${device.latitude}, ${device.longitude}`);
+        devicesLayer.addLayer(deviceMarker);
       }
-  } else {
-      console.error('Invalid coordinates. Please enter numeric values.');
+    });
   }
 }
 
-// let latitude;
-// let longitude;
+function fetchOptionsFromFirebase() {
+  var geofencesRef = database.ref('DeviceDetails');
 
-// database.ref(dataPath).on("value", function (snapshot) {
-//   const jsonData = snapshot.val();
+  geofencesRef.once('value')
+  .then(function (snapshot) {
+    console.log('Data from Firebase:', snapshot.val());
+    var geofences = snapshot.val();
+      var deviceIds = [];
 
-//   const gpsDataKeys = Object.keys(jsonData.gpsData);
+      if (geofences) {
+        Object.values(geofences).forEach(function (geofence) {
+          if (geofence && geofence.device_id) {
+            deviceIds.push(geofence.device_id);
+          }
+        });
+      }
 
-//   if (gpsDataKeys.length > 0) {
-//       const firstKey = gpsDataKeys[0];
-//       const coordinatesString = jsonData.gpsData[firstKey];
+      console.log('Device IDs from Firebase:', deviceIds);
 
-//       const regex = /latitude:(.*),longitude:(.*)/;
-//       const match = coordinatesString.match(regex);
+      var selectElement = $('#options');
+      selectElement.empty();
 
-//       if (match && match.length === 3) {
-//           latitude = parseFloat(match[1].trim());
-//           longitude = parseFloat(match[2].trim());
-//       }
+      deviceIds.forEach(function (deviceId) {
+        var optionElement = $('<option>');
+        optionElement.val(deviceId).text(deviceId);
+        selectElement.append(optionElement);
+      });
+    })
+    .catch(function (error) {
+      console.error("Error fetching device IDs from Firebase:", error);
+    });
+}
 
-//       initializeMap(latitude, longitude);
-//       checkPoint(latitude, longitude);
-//   } else {
-//       console.log('No gpsData available.');
-//   }
-// });
+var geofenceId;
 
-setInterval(function () {
-}, 5000);
-
-var geocoder = L.Control.geocoder({
-  defaultMarkGeocode: false
-}).on('markgeocode', function (e) {
-  map.fitBounds(e.geocode.bbox);
-}).addTo(map);
-
-var geofenceCoordinates = [];
-
-function showForm() {
-  $('#form-container').modal('show');
+function generateRandomId() {
+  return Math.random().toString(36).substr(2, 10); // Adjust the length as needed
 }
 
 map.on(L.Draw.Event.CREATED, function (event) {
@@ -139,12 +112,20 @@ map.on(L.Draw.Event.CREATED, function (event) {
   drawnItems.addLayer(layer);
   geofenceCoordinates = layer.getLatLngs()[0].map(point => [point.lat, point.lng]);
   showForm();
+  geofenceId = generateRandomId();
+  console.log(geofenceId);
 });
 
 $('#firebaseForm').submit(function (event) {
   event.preventDefault();
 
+  if (!geofenceId) {
+    geofenceId = generateRandomId();
+    console.log(geofenceId);
+  }
+
   var formData = {
+    geofenceId: geofenceId,
     name: $('#name').val(),
     date: $('#date').val(),
     durationfrom: $('#durationFrom').val(),
@@ -152,18 +133,28 @@ $('#firebaseForm').submit(function (event) {
     options: Array.from($('#options')[0].selectedOptions).map(option => option.value),
     geofenceCoordinates: geofenceCoordinates
   };
-
+  
   var formsRef = database.ref('geofences');
-  formsRef.push(formData)
+  formsRef.child(geofenceId).set(formData)
     .then(function () {
       console.log("Form Data Saved to Firebase:", formData);
       $('#firebaseForm').trigger('reset');
       $('#form-container').modal('hide');
+  
+      fetchGeofenceAndDevices(geofenceId);
     })
     .catch(function (error) {
       console.error("Error saving form data:", error);
-    });
+    });  
 });
+
+function generateGeofenceId() {
+  return $('#name').val() + $('#date').val();
+}
+
+function showForm() {
+  $('#form-container').modal('show');
+}
 
 function showToast(title, message, bgClass) {
   var toast = $('<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">')
@@ -213,92 +204,177 @@ function clearCoordinates() {
 
 function isPointInsideGeofence(point) {
   if (!geofenceCoordinates || geofenceCoordinates.length === 0) {
-      return false;
+    return false;
   }
 
   var lat = point.lat;
   var lng = point.lng;
   var polygon = {
-      type: 'Polygon',
-      coordinates: [geofenceCoordinates.map(coord => [coord[1], coord[0]])]
+    type: 'Polygon',
+    coordinates: [geofenceCoordinates.map(coord => [coord[1], coord[0]])]
   };
   var isInside = leafletPip.pointInLayer([lng, lat], L.geoJSON(polygon));
   return isInside.length > 0;
 }
 
 $('#coordinatesForm').submit(function (event) {
-event.preventDefault();
-if (geofenceCoordinates.length < 3) {
+  event.preventDefault();
+  if (geofenceCoordinates.length < 3) {
     alert('Please add at least three coordinates for the geofence.');
     return;
-}
+  }
 });
-
-function fetchOptionsFromFirebase() {
-  var geofencesRef = database.ref('DeviceDetails');
-
-  geofencesRef.once('value')
-    .then(function (snapshot) {
-      var geofences = snapshot.val();
-      var deviceIds = [];
-
-      if (geofences) {
-        Object.values(geofences).forEach(function (geofence) {
-          if (geofence && geofence.device_id) {
-            deviceIds.push(geofence.device_id);
-          }
-        });
-      }
-
-      console.log('Device IDs from Firebase:', deviceIds);
-
-      var selectElement = $('#options');
-      selectElement.empty();
-
-      deviceIds.forEach(function (deviceId) {
-        var optionElement = $('<option>');
-        optionElement.val(deviceId).text(deviceId);
-        selectElement.append(optionElement);
-      });
-    })
-    .catch(function (error) {
-      console.error("Error fetching device IDs from Firebase:", error);
-    });
-}
 
 $(document).ready(function () {
   fetchOptionsFromFirebase();
 
   $('#form-container').on('hidden.bs.modal', function () {
-      $('#firebaseForm').trigger('reset');
+    $('#firebaseForm').trigger('reset');
   });
 
   $('#form-container-submit').on('click', function () {
-      $('#form-container').modal('hide');
+    $('#form-container').modal('hide');
   });
-});
 
-var devicesLayer = L.layerGroup();
-map.addLayer(devicesLayer);
-
-function updateDeviceMarkers(deviceData) {
-  devicesLayer.clearLayers();
-
-  if (deviceData) {
-    Object.values(deviceData).forEach(function (device) {
+  $('#addMarkersBtn').on('click', function () {
+    if (!geofenceId) {
+      console.error('Geofence ID is not defined.');
+      return;
+    }
+  
+    if (!deviceData) {
+      console.error('Device data is not available.');
+      return;
+    }
+  
+    var selectedDevices = Array.from($('#options option:selected')).map(option => option.value);
+  
+    if (selectedDevices.length === 0) {
+      alert('Please select devices to add markers.');
+      return;
+    }
+  
+    devicesLayer.clearLayers();
+  
+    selectedDevices.forEach(function (deviceId) {
+      var device = deviceData[deviceId];
       if (device && device.latitude && device.longitude) {
         var deviceMarker = L.marker([device.latitude, device.longitude])
           .bindPopup(`<b>Device ID:</b> ${device.device_id}<br><b>Location:</b> ${device.latitude}, ${device.longitude}`);
         devicesLayer.addLayer(deviceMarker);
       }
     });
+  });
+  
+});
+
+function fetchGeofenceAndDevices(selectedDevices) {
+  if (typeof selectedDevices === 'string') {
+    selectedDevices = [selectedDevices];
+  }
+
+  if (Array.isArray(selectedDevices) && selectedDevices.length > 0) {
+    selectedDevices.forEach(function (deviceId) {
+      deviceId = "100";
+      var deviceRef = database.ref('gpsData/' + deviceId);
+
+      deviceRef.once('value')
+        .then(function (snapshot) {
+          var deviceData = snapshot.val();
+
+          if (deviceData) {
+            var dataParts = deviceData.split(',');
+
+            // Make sure dataParts has at least 3 elements before accessing them
+            if (dataParts.length >= 3) {
+              var latitude = parseFloat(dataParts[1].split(':')[1]);
+              var longitude = parseFloat(dataParts[2].split(':')[1]);
+
+              var parsedDeviceData = {
+                device_id: deviceId,
+                latitude: latitude,
+                longitude: longitude
+              };
+
+              updateMapWithDeviceCoordinates(parsedDeviceData);
+            } else {
+              console.log('Invalid device data format for ' + deviceId);
+            }
+          } else {
+            console.log('Device data not available for ' + deviceId);
+          }
+
+          updateDeviceList();
+        })
+        .catch(function (error) {
+          console.error('Error fetching device details:', error);
+        });
+    });
+  } else {
+    console.error('Selected devices are not in the expected format:', selectedDevices);
+  }
+}
+
+function fetchDeviceDetails(selectedDevices) {
+  selectedDevices.forEach(function (deviceId) {
+    var deviceRef = database.ref('gpsData/' + deviceId);
+
+    deviceRef.once('value')
+      .then(function (snapshot) {
+        var deviceData = snapshot.val();
+
+        if (deviceData) {
+          var dataParts = deviceData.split(',');
+          var latitude = parseFloat(dataParts[1].split(':')[1]);
+          var longitude = parseFloat(dataParts[2].split(':')[1]);
+
+          var parsedDeviceData = {
+            device_id: deviceId,
+            latitude: latitude,
+            longitude: longitude
+          };
+
+          updateMapWithDeviceCoordinates(parsedDeviceData);
+        } else {
+          console.log('Device data not available for ' + deviceId);
+        }
+
+        updateDeviceList();
+      })
+      .catch(function (error) {
+        console.error('Error fetching device details:', error);
+      });
+  });
+}
+
+function updateMapWithDeviceCoordinates(deviceData) {
+  if (deviceData && deviceData.latitude && deviceData.longitude) {
+    var deviceMarker = L.marker([deviceData.latitude, deviceData.longitude])
+      .bindPopup(`<b>Device ID:</b> ${deviceData.device_id}<br><b>Location:</b> ${deviceData.latitude}, ${deviceData.longitude}`);
+    devicesLayer.addLayer(deviceMarker);
+
+    map.setView([deviceData.latitude, deviceData.longitude], 13);
+  }
+}
+
+function updateDeviceList() {
+  var deviceList = $('#options');
+  deviceList.empty();
+
+  if (deviceData) {
+    Object.values(deviceData).forEach(function (device) {
+      if (device && device.device_id) {
+        var listItem = $('<option>').val(device.device_id).text(device.device_id);
+        deviceList.append(listItem);
+      }
+    });
   }
 }
 
 database.ref('DeviceDetails').on('value', function (snapshot) {
-  var deviceData = snapshot.val();
-  
+  deviceData = snapshot.val();
+
   setTimeout(function () {
-    updateDeviceMarkers(deviceData);
+    updateDeviceList();
   }, 0);
 });

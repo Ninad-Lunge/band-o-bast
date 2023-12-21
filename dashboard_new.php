@@ -23,6 +23,11 @@
             <div class="col my-1 ps-0 me-2 border border-dark">
                 <div id="map"></div>
             </div>
+            <div id="sidePanel" class="side-panel col-md-2">
+                <h5>Device List</h5>
+                <ul id="deviceList"></ul>
+                <button id="addMarkersBtn">Add Markers</button>
+            </div>
         </div>
     </div>
 

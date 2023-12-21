@@ -79,7 +79,8 @@ void handlePostGPSData() {
 
 void sendGPSDataToFirebase(String data) {
   FirebaseData fbdo;
-  Firebase.pushString(fbdo, "/gpsData", data);
+  String deviceId = "100";
+  Firebase.pushString(fbdo, "/gpsData/" + deviceId, data);
 
   Serial.println("Sent GPS data to Firebase: " + data);
 }
