@@ -1,191 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formal Dashboard with Geofencing Map</title>
+    <title>Report</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
     <!-- Add Bootstrap CSS link -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-        }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    
+    <?php include('php/links.php'); ?>
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>  
 
-        .navbar {
-            height: 54px;
-        }
-
-        .navbar img {
-            width: 20px;
-            margin-right: 10px;
-            margin-left: 5px;
-        }
-
-        .navbar h1 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: bold;
-            line-height: 20px;
-        }
-
-        #left-sidebar2{
-            height: 100%;
-            width: 100%;
-        }
-
-        .sidebar img.logo {
-            width: 30px;
-            height: auto;
-            margin-top: 30px;
-            margin-right: 20%;
-            align-items: center;
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .sidebar img.logo:hover::after {
-            content: attr(data-name);
-            position: absolute;
-            top: 100%;
-            left: 0%;
-            transform: translateX(-50%);
-            background-color: #fcf7f7;
-            color: #f9f6f6;
-            border-radius: 0px;
-            font-size: 14px;
-            z-index: 1;
-        }
-
-        .col-md-2.sidebar {
-            flex: 0 0 3%;
-            height: 100vh;
-            width: 100%;
-            background-color: #fffcfc;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .col-md-2.sidebar img.logo:hover {
-            transform: scale(1.2);
-        }
-
-        .row {
-            height: 100vh;
-        }
-
-        .sector-box {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel {
-            height: 100%;
-            width: 100%;
-            
-            color: #333;
-            background-color: #fff;
-            
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease-in-out;
-            display: flex;
-            flex-direction: column;
-        }
-    </style>
-</head>
-
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark navbar-expand-sm">
-        <img src="image/WhatsApp_Image_2023-12-07_at_13.39.46_4919e1c9-removebg-preview.png" alt="Website Logo"
-            class="navbar-brand">
-        <h1 class="navbar-brand">Band-O-Bast System</h1>
-    </nav>
-
+<body>
     <div class="container-fluid">
         <div class="row">
-        
-            <nav class="col-md-2   sidebar mr-auto" style="padding-right: 3%;background-color: #e6e5e5;">
-            <a href="dashboard.php"><img class="logo" src="image/home_25694.png" alt="Pin Logo" data-name="Pin Logo"></a>
-            <a href="sector.php"><img class="logo" src="image/pin_1217301.png" alt="Pin Logo" data-name="Pin Logo"></a>
-    <a href="monitorBandobast.php"><img class="logo" src="image/search_5140760.png" alt="Search Logo" data-name="Search Logo"></a>
-    <a href="profile.php"><img class="logo" src="image/account_3033143.png" alt="Account Logo" data-name="Account Logo"></a>
-    <a href="report.php"><img class="logo" src="image/report_7965820.png" alt="Account Logo" data-name="Account Logo"></a>
-            </nav>
-
-            <div class="col col-md-3">
-                <div id="left-sidebar2" class="col-md-auto" style="padding-left:0px ;padding-top: 4px;padding-right:0px;">
-                <div class="panel" style="height: 90%; text-align: center;">
-                    panel
-                    </div>
+            <?php include('components/titlebar.php'); ?>
+        </div>
+        <div class="row">   
+            <div class="col-md-4">                   
+                <?php include('components/sidebar.php'); ?>
+            </div>
+            <div class="col-md-4">                                                                    
+                <div class="chart-container" >
+                    <canvas id="myPieChart1"></canvas>
                 </div>
+                <div class="chart-container">
+                    <canvas id="myPieChart2"></canvas>
+                </div>                                                     
             </div>
+        </div>     
+    </div>
 
-            <div class="col">
-                <div class="content">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="chart-container">
-                                    <canvas id="myPieChart1"></canvas>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="chart-container">
-                                    <canvas id="myPieChart2"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </div>
-
-
-
-            <script>
-                var data1 = {
-                    
-                    datasets: [{
-                        data: [30, 70],
-                        backgroundColor: ['', '#36A2EB'],
-                        hoverBackgroundColor: ['', '#36A2EB']
-                    }],
-                    labels: ['Outside zone', 'Inside zone']
-                };
-                var data2 = {
-                    datasets: [{
-                        data: [45, 55],
-                        backgroundColor: ['', '#FFCE56'],
-                        hoverBackgroundColor: ['', '#FFCE56']
-                    }],
-                    labels: ['Wearing Watch', 'Not Wearing ']
-                };
+    <!-- Include Firebase scripts and other necessary scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.1/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script>
+    <script src="https://unpkg.com/leaflet-draw" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" defer></script>
+    <script src="https://unpkg.com/leaflet-pip/leaflet-pip.js" defer></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script>
+    var data1 = {
         
-                // Get the context of the canvas element we want to select
-                var ctx1 = document.getElementById("myPieChart1").getContext('2d');
-                var ctx2 = document.getElementById("myPieChart2").getContext('2d');
-        
-                // Create a pie chart
-                var myPieChart1 = new Chart(ctx1, {
-                    type: 'pie',
-                    data: data1,
-                });
-        
-                var myPieChart2 = new Chart(ctx2, {
-                    type: 'pie',
-                    data: data2,
-                });
-            </script>
-        </body>
+        datasets: [{
+            data: [30, 70],
+            backgroundColor: ['', '#36A2EB'],
+            hoverBackgroundColor: ['', '#36A2EB']
+        }],
+        labels: ['Outside zone', 'Inside zone']
+    };
+    var data2 = {
+        datasets: [{
+            data: [45, 55],
+            backgroundColor: ['', '#FFCE56'],
+            hoverBackgroundColor: ['', '#FFCE56']
+        }],
+        labels: ['Wearing Watch', 'Not Wearing ']
+    };
+
+    // Get the context of the canvas element we want to select
+    var ctx1 = document.getElementById("myPieChart1").getContext('2d');
+    var ctx2 = document.getElementById("myPieChart2").getContext('2d');
+
+    // Create a pie chart
+    var myPieChart1 = new Chart(ctx1, {
+        type: 'pie',
+        data: data1,
+    });
+
+    var myPieChart2 = new Chart(ctx2, {
+        type: 'pie',
+        data: data2,
+    });
+</script>
+</body>
 
 </html>
