@@ -1,7 +1,7 @@
 "Band-o-Bast" 
 
 *Final Product*
-<img src="https://github.com/Ninad-Lunge/band-o-bast/assets/96621805/21a143de-40c7-421e-8a48-ae06bc95da23" width="100">
+<img src="https://github.com/Ninad-Lunge/band-o-bast/assets/96621805/21a143de-40c7-421e-8a48-ae06bc95da23" width="50">
 
 The hardware used for implementation of this project:
 1. ESP8266 NodeMCU Microcontroller
