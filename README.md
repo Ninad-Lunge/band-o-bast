@@ -1,6 +1,6 @@
-"# Band-o-Bast" 
+"Band-o-Bast" 
 
-##Final Product##
+*Final Product*
 ![band-o-bast final product](https://github.com/Ninad-Lunge/band-o-bast/assets/96621805/21a143de-40c7-421e-8a48-ae06bc95da23)
 
 The hardware used for implementation of this project:
